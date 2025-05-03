@@ -1,46 +1,13 @@
 //importar express
 import express from 'express';
 import Pet from './models/pet.js';
-
+import cors from 'cors';
 //instanciar express
 const app = express();
 
 //indicar para o express ler o body com json
 app.use(express.json())
-
-// //mock
-// const pets = [
-//     {
-//         id:1,
-//         especie: 'Cachorro',
-//         nome: 'Spike',
-//         raca: 'Labrador Retriever',
-//         idade: '2 Anos',
-//         sexo: 'Macho',
-//         decricao: 'Muito brincalhão',
-//         imagens: 'sem imagem'
-//     },
-//     {
-//         id:2,
-//         especie: 'Cachorro',
-//         nome: 'Bella',
-//         raca: 'Shih Tzu',
-//         idade: '3 Meses',
-//         sexo: 'Fêmea',
-//         decricao: 'Muito dócil',
-//         imagens: 'sem imagem'
-//     },
-//     {
-//         id:3,
-//         especie: 'Gato',
-//         nome: 'Bella',
-//         raca: 'Siamês',
-//         idade: '6 Meses',
-//         sexo: 'Fêmea',
-//         decricao: 'Muito carinhosa',
-//         imagens: 'sem imagem'
-//     },
-// ]
+app.use(cors());
 //buscar pet por id
 function buscarPetPorId(id){
     return pets.filter((pet)=> pet.id == id);
@@ -58,14 +25,15 @@ app.get('/', (req, res)=>{
 })
 
 //Requisição da lista de pets
-app.get('/pets', async (req, res)=>{
-    try{
-        const pets = await Pet.find();
-        res.status(200).send(pets);
-    } catch (error){
-        res.status(500).send('Erro ao buscar os pets');
-    }
-})
+app.get('/pets', async (req, res) => {
+  try {
+    const limite = parseInt(req.query.limit) || 0;
+    const pets = await Pet.find().limit(limite);
+    res.status(200).send(pets);
+  } catch (error) {
+    res.status(500).send('Erro ao buscar os pets');
+  }
+});
 
 //requisição por Id
 app.get('/pets/:id', async (req, res) =>{

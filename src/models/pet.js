@@ -8,7 +8,7 @@ const petSchema = new mongoose.Schema(
     idade: String,
     sexo: String,
     descricao: String,
-    imagens: String,
+    imagens: [String]
   },
   { collection: "petsLista" }
 );
