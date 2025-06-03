@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Pet = require('../models/pet');
+const { protect } = require('../middleware/auth');
 
 // Requisição da lista de pets
 router.get('/', async (req, res) => {
@@ -28,9 +29,13 @@ router.get('/:id', async (req, res) => {
 });
 
 // Criar novo pet
-router.post('/', async (req, res) => {
+router.post('/', protect, async (req, res) => {
   try {
-    const novoPet = new Pet(req.body);
+    const novoPet = new Pet({
+      ...req.body,
+      usuario: req.user._id
+    });
+
     await novoPet.save();
     res.status(201).send('Pet cadastrado com sucesso!');
   } catch (error) {
@@ -39,31 +44,44 @@ router.post('/', async (req, res) => {
 });
 
 // Atualizar pet
-router.put('/:id', async (req, res) => {
+router.put('/:id', protect, async (req, res) => {
   try {
-    const petAtualizado = await Pet.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (petAtualizado) {
-      res.json(petAtualizado);
-    } else {
-      res.status(404).send('Pet não encontrado');
+    const pet = await Pet.findById(req.params.id);
+
+    if (!pet) {
+      return res.status(404).send('Pet não encontrado');
     }
+
+    if (pet.usuario.toString() !== req.user._id.toString()) {
+      return res.status(403).send('Você não tem permissão para atualizar este pet');
+    }
+
+    const petAtualizado = await Pet.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(petAtualizado);
   } catch (error) {
     res.status(500).send('Erro ao atualizar o pet');
   }
 });
 
 // Deletar pet
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', protect, async (req, res) => {
   try {
-    const petExcluido = await Pet.findByIdAndDelete(req.params.id);
-    if (petExcluido) {
-      res.send(`Pet com id ${req.params.id} excluído com sucesso`);
-    } else {
-      res.status(404).send('Pet não encontrado');
+    const pet = await Pet.findById(req.params.id);
+
+    if (!pet) {
+      return res.status(404).send('Pet não encontrado');
     }
+
+    if (pet.usuario.toString() !== req.user._id.toString()) {
+      return res.status(403).send('Você não tem permissão para deletar este pet');
+    }
+
+    await pet.remove();
+    res.send(`Pet com id ${req.params.id} excluído com sucesso`);
   } catch (error) {
     res.status(500).send('Erro ao excluir o pet');
   }
 });
+
 
 module.exports = router;

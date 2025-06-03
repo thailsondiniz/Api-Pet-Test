@@ -8,7 +8,12 @@ const petSchema = new mongoose.Schema(
     idade: String,
     sexo: String,
     descricao: String,
-    imagens: [String]
+    imagens: [String],
+    usuario: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'user',
+      required: true
+    }
   },
   { collection: "petsLista" }
 );
